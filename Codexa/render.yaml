@@ -4,7 +4,7 @@ services:
     env: node
     plan: free
     rootDir: backend
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npm run prisma:generate && npm run build
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
@@ -15,3 +15,11 @@ services:
         value: 7d
       - key: PORT
         value: 4000
+      - key: FRONTEND_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        sync: false

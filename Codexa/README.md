@@ -14,7 +14,7 @@ Codexa is a modern AI-powered placement preparation tracker for students prepari
 
 - `frontend/` - dashboard UI, landing page, auth screens, trackers, analytics, and settings
 - `backend/` - REST API, auth, progress tracking, analytics, profile, and goals
-- `prisma/` - Prisma schema and seed data
+- `backend/prisma/` - Prisma schema and seed data
 
 ## Getting Started
 
@@ -63,6 +63,19 @@ npm run dev
 - `JWT_EXPIRES_IN`
 - `PORT`
 - `VITE_API_URL`
+- `FRONTEND_URL`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI`
+
+### Google OAuth
+
+Google sign-in is implemented through the backend auth service. When you configure the Google Cloud OAuth client, use these redirect targets:
+
+- Backend callback: `https://<your-render-service>/api/auth/google/callback`
+- Frontend callback page: `https://<your-vercel-app>/auth/google/callback`
+
+The Google button on the login/signup screen now starts a real OAuth flow instead of the old demo credential shortcut.
 
 ## Prisma Models
 
@@ -104,6 +117,8 @@ Codexa includes schema coverage for:
 - Frontend: connect the `frontend/` folder to Vercel
 - Backend: connect the `backend/` folder to Render or Railway
 - Database: use Supabase or Neon PostgreSQL and copy the connection string into `DATABASE_URL`
+- Add `FRONTEND_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI` to the backend deployment environment
+- Set `GOOGLE_REDIRECT_URI` to the backend callback URL and register the matching redirect URI in Google Cloud Console
 
 If you'd like, I can add a `vercel` project config or a `render` service template and CI workflow.
 

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Chrome, Eye, EyeOff, Sparkles } from 'lucide-react';
 import axios from 'axios';
+import api from '@/api/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -32,37 +33,15 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
     navigate(onboardingCompleted ? '/dashboard' : '/onboarding', { replace: true });
   };
 
-  const handleGoogleAuth = async () => {
+  const handleGoogleAuth = () => {
     setLoading(true);
     setError(null);
 
-    const googleName = 'Google User';
-    const googleEmail = 'google@codexa.dev';
-    const googlePassword = 'Google#12345';
+    const backendBase = (api.defaults.baseURL ?? 'http://localhost:4000/api').replace(/\/$/, '');
+    const googleAuthUrl = new URL(`${backendBase}/auth/google`);
+    googleAuthUrl.searchParams.set('rememberMe', rememberMe ? '1' : '0');
 
-    try {
-      if (mode === 'login') {
-        try {
-          const user = await login(googleEmail, googlePassword, rememberMe);
-          routeAfterAuth(user.onboardingCompleted);
-        } catch {
-          const user = await signup({ name: googleName, email: googleEmail, password: googlePassword }, rememberMe);
-          routeAfterAuth(user.onboardingCompleted);
-        }
-      } else {
-        const user = await signup({ name: googleName, email: googleEmail, password: googlePassword }, rememberMe);
-        routeAfterAuth(user.onboardingCompleted);
-      }
-    } catch (submitError) {
-      if (axios.isAxiosError(submitError)) {
-        const apiMessage = submitError.response?.data?.message;
-        setError(typeof apiMessage === 'string' ? apiMessage : 'Google sign-in failed. Please try again.');
-      } else {
-        setError('Google sign-in failed. Please try again.');
-      }
-    } finally {
-      setLoading(false);
-    }
+    window.location.assign(googleAuthUrl.toString());
   };
 
   const onSubmit = async (event: React.FormEvent) => {

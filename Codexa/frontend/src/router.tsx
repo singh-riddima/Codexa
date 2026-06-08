@@ -6,6 +6,7 @@ import CreatorPage from './pages/CreatorPage';
 import ContactPage from './pages/ContactPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import GoogleAuthCallbackPage from './pages/GoogleAuthCallbackPage';
 import OnboardingPage from './pages/OnboardingPage';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
@@ -40,6 +41,7 @@ export const AppRoutes = [
   { path: '/contact', element: <ContactPage /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/signup', element: <SignupPage /> },
+  { path: '/auth/google/callback', element: <GoogleAuthCallbackPage /> },
   {
     path: '/onboarding',
     element: (
