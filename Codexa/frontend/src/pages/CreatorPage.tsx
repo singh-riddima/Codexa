@@ -59,7 +59,7 @@ export default function CreatorPage() {
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/15 text-white">
                           {skill.logo ? (
                             <img src={skill.logo} alt={`${skill.label} logo`} className="h-6 w-6 object-contain" />
-                          ) : skill.icon ? (
+                          ) : Icon ? (
                             <Icon className="h-5 w-5" />
                           ) : null}
                         </div>
