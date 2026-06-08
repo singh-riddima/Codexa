@@ -7,10 +7,11 @@
     "moduleResolution": "NodeNext",
     "types": ["node"],
     "baseUrl": ".",
+    "ignoreDeprecations": "5.0",
     "paths": {
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "prisma/seed.ts"],
+  "include": ["src"],
   "exclude": ["dist", "node_modules"]
 }

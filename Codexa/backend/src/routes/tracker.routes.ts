@@ -58,12 +58,14 @@ router.route('/dsa-topics').get(asyncHandler(async (req, res) => {
 }));
 
 router.patch('/dsa-topics/:id', asyncHandler(async (req, res) => {
-  const topic = await prisma.dsaTopic.update({ where: { id: req.params.id }, data: req.body });
+  const topicId = String(req.params.id);
+  const topic = await prisma.dsaTopic.update({ where: { id: topicId }, data: req.body });
   res.json(topic);
 }));
 
 router.delete('/dsa-topics/:id', asyncHandler(async (req, res) => {
-  await prisma.dsaTopic.delete({ where: { id: req.params.id } });
+  const topicId = String(req.params.id);
+  await prisma.dsaTopic.delete({ where: { id: topicId } });
   res.status(204).send();
 }));
 
@@ -75,12 +77,14 @@ router.route('/coding-problems').get(asyncHandler(async (req, res) => {
 }));
 
 router.patch('/coding-problems/:id', asyncHandler(async (req, res) => {
-  const problem = await prisma.codingProblem.update({ where: { id: req.params.id }, data: req.body });
+  const problemId = String(req.params.id);
+  const problem = await prisma.codingProblem.update({ where: { id: problemId }, data: req.body });
   res.json(problem);
 }));
 
 router.delete('/coding-problems/:id', asyncHandler(async (req, res) => {
-  await prisma.codingProblem.delete({ where: { id: req.params.id } });
+  const problemId = String(req.params.id);
+  await prisma.codingProblem.delete({ where: { id: problemId } });
   res.status(204).send();
 }));
 
@@ -92,12 +96,14 @@ router.route('/subjects').get(asyncHandler(async (req, res) => {
 }));
 
 router.patch('/subjects/:id', asyncHandler(async (req, res) => {
-  const subject = await prisma.subjectProgress.update({ where: { id: req.params.id }, data: req.body });
+  const subjectId = String(req.params.id);
+  const subject = await prisma.subjectProgress.update({ where: { id: subjectId }, data: req.body });
   res.json(subject);
 }));
 
 router.delete('/subjects/:id', asyncHandler(async (req, res) => {
-  await prisma.subjectProgress.delete({ where: { id: req.params.id } });
+  const subjectId = String(req.params.id);
+  await prisma.subjectProgress.delete({ where: { id: subjectId } });
   res.status(204).send();
 }));
 
@@ -109,12 +115,14 @@ router.route('/aptitude').get(asyncHandler(async (req, res) => {
 }));
 
 router.patch('/aptitude/:id', asyncHandler(async (req, res) => {
-  const result = await prisma.aptitudePerformance.update({ where: { id: req.params.id }, data: req.body });
+  const resultId = String(req.params.id);
+  const result = await prisma.aptitudePerformance.update({ where: { id: resultId }, data: req.body });
   res.json(result);
 }));
 
 router.delete('/aptitude/:id', asyncHandler(async (req, res) => {
-  await prisma.aptitudePerformance.delete({ where: { id: req.params.id } });
+  const resultId = String(req.params.id);
+  await prisma.aptitudePerformance.delete({ where: { id: resultId } });
   res.status(204).send();
 }));
 

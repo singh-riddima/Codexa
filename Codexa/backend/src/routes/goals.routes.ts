@@ -28,12 +28,14 @@ router.post('/', validate(goalSchema), asyncHandler(async (req, res) => {
 }));
 
 router.patch('/:id', asyncHandler(async (req, res) => {
-  const goal = await prisma.goal.update({ where: { id: req.params.id }, data: req.body });
+  const goalId = String(req.params.id);
+  const goal = await prisma.goal.update({ where: { id: goalId }, data: req.body });
   res.json(goal);
 }));
 
 router.delete('/:id', asyncHandler(async (req, res) => {
-  await prisma.goal.delete({ where: { id: req.params.id } });
+  const goalId = String(req.params.id);
+  await prisma.goal.delete({ where: { id: goalId } });
   res.status(204).send();
 }));
 

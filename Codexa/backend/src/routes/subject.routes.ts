@@ -72,7 +72,8 @@ router.get('/catalog', asyncHandler(async (_req, res) => {
 }));
 
 router.get('/:subjectKey/catalog', asyncHandler(async (req, res) => {
-  const subject = getSubjectCatalog(req.params.subjectKey);
+  const subjectKey = String(req.params.subjectKey);
+  const subject = getSubjectCatalog(subjectKey);
   if (!subject) return res.status(404).json({ message: 'Subject dataset not found' });
   res.json({ subject });
 }));
@@ -80,7 +81,7 @@ router.get('/:subjectKey/catalog', asyncHandler(async (req, res) => {
 router.use(authMiddleware);
 
 router.get('/:subjectKey', asyncHandler(async (req, res) => {
-  const subjectKey = req.params.subjectKey;
+  const subjectKey = String(req.params.subjectKey);
   const userId = req.user!.id;
 
   try {
@@ -108,7 +109,7 @@ router.get('/:subjectKey', asyncHandler(async (req, res) => {
 }));
 
 router.get('/:subjectKey/topics', asyncHandler(async (req, res) => {
-  const subjectKey = req.params.subjectKey;
+  const subjectKey = String(req.params.subjectKey);
   const userId = req.user!.id;
   try {
     const topics = await prisma.subjectProgress.findMany({ where: { userId, subject: subjectKey }, orderBy: { updatedAt: 'desc' } });
@@ -129,7 +130,7 @@ router.get('/:subjectKey/topics', asyncHandler(async (req, res) => {
 }));
 
 router.post('/:subjectKey/topics', asyncHandler(async (req, res) => {
-  const subjectKey = req.params.subjectKey;
+  const subjectKey = String(req.params.subjectKey);
   const userId = req.user!.id;
   const parsed = topicSchema.parse(req.body);
 
@@ -159,8 +160,8 @@ router.post('/:subjectKey/topics', asyncHandler(async (req, res) => {
 
 router.patch('/:subjectKey/topics/:topicId', asyncHandler(async (req, res) => {
   const userId = req.user!.id;
-  const subjectKey = req.params.subjectKey;
-  const { topicId } = req.params;
+  const subjectKey = String(req.params.subjectKey);
+  const topicId = String(req.params.topicId);
   const parsed = topicSchema.partial().parse(req.body);
 
   try {
@@ -199,7 +200,8 @@ router.patch('/:subjectKey/topics/:topicId', asyncHandler(async (req, res) => {
 
 router.delete('/:subjectKey/topics/:topicId', asyncHandler(async (req, res) => {
   const userId = req.user!.id;
-  const { topicId } = req.params;
+  const subjectKey = String(req.params.subjectKey);
+  const topicId = String(req.params.topicId);
 
   try {
     const topic = await prisma.subjectProgress.findUnique({ where: { id: topicId } });
@@ -211,7 +213,7 @@ router.delete('/:subjectKey/topics/:topicId', asyncHandler(async (req, res) => {
       throw error;
     }
 
-    deleteMemoryTopic(userId, req.params.subjectKey, topicId);
+    deleteMemoryTopic(userId, subjectKey, topicId);
     res.status(204).send();
   }
 }));
