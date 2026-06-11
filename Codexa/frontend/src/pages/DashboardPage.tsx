@@ -234,37 +234,7 @@ export default function DashboardPage() {
           )}
         </section>
 
-        <section className="space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-2xl font-semibold">Dataset library</h2>
-              <p className="mt-1 text-sm text-white/60">Every workbook in <span className="text-white/80">backend/dataset</span> is available here, including new files you add later.</p>
-            </div>
-            <Badge className="border border-white/10 bg-white/5 px-3 py-1 text-white/70">{datasetCards.length} datasets</Badge>
-          </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {datasetCards.map((subject, index) => (
-              <motion.div key={subject.key} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.03 }}>
-                <Link to={subject.to} className="group block h-full">
-                  <Card className="h-full border-white/10 bg-[linear-gradient(180deg,rgba(13,11,24,.86),rgba(12,10,22,.7))] transition duration-300 group-hover:-translate-y-1 group-hover:border-fuchsia-400/40 group-hover:shadow-[0_14px_50px_rgba(168,85,247,.18)]">
-                    <CardHeader>
-                      <CardTitle className="text-lg text-white">{subject.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4 text-sm text-white/65">
-                      <div className="flex flex-wrap gap-2">
-                        <Badge className="border border-white/10 bg-white/5 px-3 py-1 text-white/70">{subject.modules} modules</Badge>
-                        <Badge className="border border-white/10 bg-white/5 px-3 py-1 text-white/70">{subject.topics} topics</Badge>
-                        <Badge className="border border-white/10 bg-white/5 px-3 py-1 text-white/70">{subject.subtopics} subtopics</Badge>
-                      </div>
-                      <p className="text-xs uppercase tracking-[0.3em] text-white/45 transition group-hover:text-fuchsia-200">Open workbook-backed subject</p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </section>
 
         {/* Practice & Mock Preparation section removed per request */}
 
