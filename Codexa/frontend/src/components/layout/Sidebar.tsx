@@ -99,21 +99,7 @@ export function Sidebar() {
           </div>
         </div>
 
-        <div className="mt-4 rounded-3xl border border-white/10 bg-white/5 p-4">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/45">Dataset library</p>
-          <div className="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1 [scrollbar-width:thin]">
-            {datasetLinks.length ? datasetLinks.map((subject) => (
-              <NavLink
-                key={subject.key}
-                to={`/subject/${subject.key}`}
-                className={({ isActive }) => cn('block rounded-2xl border border-white/8 px-3 py-2 text-sm text-white/70 transition hover:border-fuchsia-400/25 hover:bg-fuchsia-500/10 hover:text-white', isActive && 'border-fuchsia-400/30 bg-fuchsia-500/15 text-white')}
-              >
-                <span className="block">{subject.title}</span>
-                <span className="mt-1 block text-xs text-white/45">{subject.counts.modules} modules · {subject.counts.topics} topics</span>
-              </NavLink>
-            )) : <p className="text-sm text-white/45">No dataset workbooks found.</p>}
-          </div>
-        </div>
+
       </nav>
       <div className="border-t border-white/10 p-5 text-xs text-white/50">
         <p className="leading-6">AI-powered placement tracker with futuristic analytics and clean architecture.</p>
