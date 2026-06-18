@@ -10,53 +10,108 @@ import { useAuth } from '@/context/AuthContext';
 import { slugifySubjectName } from '@/lib/subject-data';
 import api from '@/api/client';
 import { useQueries } from '@tanstack/react-query';
+import { CodexaSelect } from '@/components/ui/codexa-select';
+import { CodexaDateInput } from '@/components/ui/codexa-date-input';
+
 
 type TargetCategory = 'Daily' | 'Weekly' | 'Monthly';
+
+type ScheduleType = 'Today' | 'This Week' | 'Custom Date';
 
 type TargetItem = {
   id: number;
   title: string;
   subject: string;
   category: TargetCategory;
+  schedule: ScheduleType;
+  scheduleDate?: string; // yyyy-mm-dd for Custom Date
   deadline: string;
   priority: 'Low' | 'Medium' | 'High';
   progress: number;
   completed: boolean;
 };
 
+
 const buildTargetsFromSubjects = (subjects: string[]): TargetItem[] => subjects.map((subject, index) => {
   const category: TargetCategory = index % 3 === 0 ? 'Daily' : index % 3 === 1 ? 'Weekly' : 'Monthly';
+
+  const schedule: ScheduleType = category === 'Daily' ? 'Today' : category === 'Weekly' ? 'This Week' : 'Custom Date';
+  const scheduleDate = schedule === 'Custom Date' ? '2026-05-30' : undefined;
+
+  const deadline = schedule === 'Today' ? 'Today' : schedule === 'This Week' ? 'This Week' : scheduleDate ? scheduleDate : 'Custom';
+
   return {
     id: index + 1,
     title: `Revise ${subject}`,
     subject,
     category,
-    deadline: category === 'Daily' ? 'Today' : category === 'Weekly' ? 'Friday' : '30 May',
+    schedule,
+    scheduleDate,
+    deadline,
     priority: category === 'Daily' ? 'High' : category === 'Weekly' ? 'Medium' : 'Low',
     progress: 0,
     completed: false
   };
 });
 
+
+type SubjectCatalogItem = {
+  key: string;
+  title: string;
+  sourceFile: string;
+  counts: {
+    modules: number;
+    topics: number;
+    subtopics: number;
+  };
+};
+
+type SubjectCatalogModule = {
+  module: string;
+  topics: Array<{ title: string }>;
+};
+
+type SubjectCatalogResponse = {
+  subject: {
+    key: string;
+    title: string;
+    modules: SubjectCatalogModule[];
+  };
+};
+
 export default function TargetsPage() {
   const { user } = useAuth();
   const [targets, setTargets] = useState<TargetItem[]>([]);
+
+  const selectedSubjects = user?.selectedSubjects ?? [];
+  const selectedSubjectKeys = selectedSubjects.map((subject) => slugifySubjectName(subject));
+
+  const [draftSubjectKey, setDraftSubjectKey] = useState<string>('');
+  const [draftSubjectTitle, setDraftSubjectTitle] = useState<string>('');
+
+  const [subjectSearch, setSubjectSearch] = useState('');
+  const [titleSearch, setTitleSearch] = useState('');
+  const [useCustomTitle, setUseCustomTitle] = useState(false);
+
   const [draftTitle, setDraftTitle] = useState('');
-  const [draftSubject, setDraftSubject] = useState('');
-  const subjectKeys = (user?.selectedSubjects ?? []).map((subject) => slugifySubjectName(subject));
+
   const subjectQueries = useQueries({
-    queries: subjectKeys.map((key) => ({
+    queries: selectedSubjectKeys.map((key) => ({
       queryKey: ['subject', key],
       queryFn: async () => (await api.get(`/subject/${key}`)).data,
       enabled: Boolean(key)
     }))
   });
 
+  const [subjectCatalog, setSubjectCatalog] = useState<SubjectCatalogItem[]>([]);
+
   useEffect(() => {
-    setTargets(buildTargetsFromSubjects(user?.selectedSubjects ?? []));
+    // keep existing behavior (local generated targets + subject completion)
+    setTargets(buildTargetsFromSubjects(selectedSubjects));
   }, [user?.selectedSubjects]);
 
   useEffect(() => {
+    // update progress from subject summaries (existing behavior)
     setTargets((prev) => prev.map((item, index) => {
       const summary = subjectQueries[index]?.data ?? null;
       return summary ? {
@@ -67,29 +122,119 @@ export default function TargetsPage() {
     }));
   }, [subjectQueries]);
 
+  useEffect(() => {
+    // init subject dropdown to first selected subject
+    const first = selectedSubjectKeys[0] ?? '';
+    if (!draftSubjectKey && first) setDraftSubjectKey(first);
+  }, [selectedSubjectKeys, draftSubjectKey]);
+
+  useEffect(() => {
+    // derive selected subject display title
+    const idx = selectedSubjectKeys.findIndex((k) => k === draftSubjectKey);
+    setDraftSubjectTitle(idx >= 0 ? selectedSubjects[idx] : '');
+  }, [draftSubjectKey, selectedSubjectKeys, selectedSubjects]);
+
+  useEffect(() => {
+    // fetch available titles for the selected subject using existing dataset endpoints
+    const fetchCatalog = async () => {
+      if (!draftSubjectKey) return;
+      const res = await api.get(`/subject/${draftSubjectKey}/catalog`);
+      const data = res.data as SubjectCatalogResponse;
+      // Titles derived from modules/topics/subtopics in dataset (best-effort flatten)
+      const modules = data?.subject?.modules ?? [];
+      const titles = modules.flatMap((m) => {
+        const topicTitles = (m.topics ?? []).map((t) => t.title).filter(Boolean);
+        return [m.module, ...topicTitles];
+      }).filter(Boolean);
+      setDraftTitle((prev) => (prev ? prev : ''));
+      setAvailableTargetTitles(titles);
+    };
+
+    // local state set below
+  }, []);
+
+  const [availableTargetTitles, setAvailableTargetTitles] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchSubjectTitles = async () => {
+      if (!draftSubjectKey) {
+        setAvailableTargetTitles([]);
+        return;
+      }
+      try {
+        const res = await api.get(`/subject/${draftSubjectKey}/catalog`);
+        const data = res.data as SubjectCatalogResponse;
+        const modules = data?.subject?.modules ?? [];
+        const titles = modules.flatMap((m) => {
+          const topicTitles = (m.topics ?? []).map((t) => t.title).filter(Boolean);
+          return [m.module, ...topicTitles];
+        }).filter(Boolean);
+        setAvailableTargetTitles(Array.from(new Set(titles)));
+      } catch {
+        setAvailableTargetTitles([]);
+      }
+    };
+
+    fetchSubjectTitles();
+    setTitleSearch('');
+    setUseCustomTitle(false);
+    setDraftTitle('');
+  }, [draftSubjectKey]);
+
+  const filteredSubjectOptions = useMemo(() => {
+    const q = subjectSearch.trim().toLowerCase();
+    const subjects = selectedSubjects;
+    if (!q) return subjects;
+    return subjects.filter((s) => s.toLowerCase().includes(q));
+  }, [subjectSearch, selectedSubjects]);
+
+  const filteredTitleOptions = useMemo(() => {
+    if (useCustomTitle) return [];
+    const q = titleSearch.trim().toLowerCase();
+    if (!q) return availableTargetTitles;
+    return availableTargetTitles.filter((t) => t.toLowerCase().includes(q));
+  }, [availableTargetTitles, titleSearch, useCustomTitle]);
+
   const grouped = useMemo(() => ({
     Daily: targets.filter((item) => item.category === 'Daily'),
     Weekly: targets.filter((item) => item.category === 'Weekly'),
     Monthly: targets.filter((item) => item.category === 'Monthly')
   }), [targets]);
 
+  const [scheduleType, setScheduleType] = useState<ScheduleType>('Today');
+  const [customScheduleDate, setCustomScheduleDate] = useState<string>('2026-05-30');
+
   const addTarget = () => {
-    if (!draftTitle.trim()) return;
+    const subject = draftSubjectTitle || selectedSubjects[0] || 'General';
+    const nextTitle = useCustomTitle ? draftTitle.trim() : draftTitle.trim();
+    if (!nextTitle) return;
+
+    const scheduleDate = scheduleType === 'Custom Date' ? customScheduleDate : undefined;
+    const deadline = scheduleType === 'Today' ? 'Today' : scheduleType === 'This Week' ? 'This Week' : scheduleDate ? scheduleDate : 'Custom';
+
     setTargets((prev) => [
       {
         id: Date.now(),
-        title: draftTitle.trim(),
-        subject: draftSubject.trim() || (user?.selectedSubjects?.[0] ?? 'General'),
+        title: nextTitle,
+        subject,
         category: 'Daily',
-        deadline: 'Tomorrow',
+        schedule: scheduleType,
+        scheduleDate,
+        deadline,
         priority: 'Medium',
         progress: 0,
         completed: false
       },
       ...prev
     ]);
+
+    // reset workflow
     setDraftTitle('');
+    setTitleSearch('');
+    setUseCustomTitle(false);
+    setScheduleType('Today');
   };
+
 
   const toggleComplete = (id: number) => {
     setTargets((prev) => prev.map((item) => item.id === id ? { ...item, completed: !item.completed, progress: item.completed ? item.progress : 100 } : item));
@@ -118,8 +263,85 @@ export default function TargetsPage() {
           <Card>
             <CardHeader><CardTitle>Create new target</CardTitle></CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-[1fr_220px_auto]">
-              <Input value={draftTitle} onChange={(event) => setDraftTitle(event.target.value)} placeholder="Target title" />
-              <Input value={draftSubject} onChange={(event) => setDraftSubject(event.target.value)} placeholder="Subject" />
+              <div className="md:col-span-2">
+                <div className="grid gap-3 md:grid-cols-2">
+                  {/* Step 1: Subject (searchable dropdown) */}
+                  <div className="space-y-2">
+                    <Input value={subjectSearch} onChange={(e) => setSubjectSearch(e.target.value)} placeholder="Search subject" />
+                    <CodexaSelect
+                      value={draftSubjectKey}
+                      onChange={(e) => setDraftSubjectKey(e.target.value)}
+                    >
+                      {filteredSubjectOptions.map((subject) => {
+                        const key = slugifySubjectName(subject);
+                        return (
+                          <option key={key} value={key} className="text-black">
+                            {subject}
+                          </option>
+                        );
+                      })}
+                    </CodexaSelect>
+                  </div>
+
+
+                  {/* Step 2: Title (dropdown from dataset + optional custom) */}
+                  <div className="space-y-2">
+                    <Input
+                      value={useCustomTitle ? draftTitle : titleSearch}
+                      onChange={(e) => (useCustomTitle ? setDraftTitle(e.target.value) : setTitleSearch(e.target.value))}
+                      placeholder={useCustomTitle ? 'Custom target title' : 'Search target title'}
+                    />
+
+                    {useCustomTitle ? null : (
+                      <CodexaSelect
+                        value={draftTitle}
+                        onChange={(e) => setDraftTitle(e.target.value)}
+                      >
+                        <option value="" className="text-black">Select title</option>
+                        {filteredTitleOptions.map((t) => (
+                          <option key={t} value={t} className="text-black">{t}</option>
+                        ))}
+                      </CodexaSelect>
+                    )}
+
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-2 text-xs text-white/60">
+                        <input
+                          type="checkbox"
+                          checked={useCustomTitle}
+                          onChange={(e) => {
+                            const next = e.target.checked;
+                            setUseCustomTitle(next);
+                            setDraftTitle(next ? draftTitle : '');
+                          }}
+                        />
+                        Create Custom Target
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Step 3: Schedule type */}
+                  <div className="space-y-2">
+                    <CodexaSelect
+                      value={scheduleType}
+                      onChange={(e) => setScheduleType(e.target.value as ScheduleType)}
+                    >
+                      <option value="Today" className="text-black">Today</option>
+                      <option value="This Week" className="text-black">This Week</option>
+                      <option value="Custom Date" className="text-black">Custom Date</option>
+                    </CodexaSelect>
+
+                    {scheduleType === 'Custom Date' ? (
+                      <CodexaDateInput
+                        value={customScheduleDate}
+                        onChange={(e) => setCustomScheduleDate(e.target.value)}
+                      />
+                    ) : null}
+                  </div>
+
+                </div>
+              </div>
+
               <Button onClick={addTarget}>Create target</Button>
             </CardContent>
           </Card>
@@ -138,8 +360,12 @@ export default function TargetsPage() {
                     <div className="mb-2 flex items-start justify-between gap-2">
                       <div>
                         <p className="font-medium">{item.title}</p>
-                        <p className="text-xs text-white/55">{item.subject} • Deadline: {item.deadline}</p>
+                        <p className="text-xs text-white/55">
+                          {item.subject} • Schedule: {item.schedule}
+                          {item.schedule === 'Custom Date' && item.scheduleDate ? ` • ${item.scheduleDate}` : ''}
+                        </p>
                       </div>
+
                       <Badge className={item.priority === 'High' ? 'border-pink-400/40 bg-pink-500/20 text-pink-100' : item.priority === 'Medium' ? 'border-fuchsia-400/40 bg-fuchsia-500/20 text-fuchsia-100' : ''}>{item.priority}</Badge>
                     </div>
                     <Progress value={item.progress} />
@@ -162,3 +388,4 @@ export default function TargetsPage() {
     </AppShell>
   );
 }
+
