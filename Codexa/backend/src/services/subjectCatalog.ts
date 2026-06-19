@@ -252,27 +252,50 @@ function tokenToPrimaryKey(token: string) {
 }
 
 function tokenToRouteLikeKeys(token: string) {
-  // Generate a few route-compatible keys (best effort, no hardcoded per subject UI).
-  // For example:
-  //  - DBMS => database-management-systems-dbms
-  //  - OS => operating-systems-os
-  //  - Cloud_Computing => cloud-computing
-  // This is robust to whether the route uses the “full title slug” or the “short token slug”.
+  // Generate a robust set of route-compatible keys.
+  // We must support multiple slug styles coming from the frontend:
+  // - full dataset display title slug
+  // - raw token slug (DBMS, OS, CN)
+  // - transformed token slug (underscores -> dashes, &/+ handling)
+  // - token with common suffixes stripped (e.g. Rust_Programming => rust)
+
   const displayTitle = titleMap[token] ?? token;
 
   const primary = slugify(displayTitle);
-  const rawTokenSlug = slugify(token.replace(/_Detailed_.*$/i, ''));
+
+  // Raw token: Rust_Programming, Go_Programming, DSA, etc.
+  const rawTokenSlug = slugify(token);
+
+  // A variant that removes common suffix patterns.
+  const tokenWithoutProgramming = token.replace(/_(Programming|Programming_Detailed)$/i, '');
+  const tokenWithoutCommonSuffixes = tokenWithoutProgramming
+    .replace(/_(Detailed)$/i, '')
+    .replace(/_Detailed$/i, '');
+
+  const shortTokenSlug = slugify(titleMap[tokenWithoutCommonSuffixes] ?? tokenWithoutCommonSuffixes);
 
   // Also try transforming common patterns:
   // - Computer_Networks => computer-networks-cn
-  // - Cyber_Security => cyber-security (if titleMap provides “Cyber Security”) etc.
+  // - Cyber_Security => cyber-security
   const normalizedToken = token
     .replace(/&/g, 'and')
     .replace(/\+/g, 'plus');
   const normalizedTokenSlug = slugify(normalizedToken.replace(/_/g, '-'));
 
-  return Array.from(new Set([primary, rawTokenSlug, normalizedTokenSlug]));
+  return Array.from(
+    new Set([
+      primary,
+      rawTokenSlug,
+      normalizedTokenSlug,
+      shortTokenSlug,
+      // If the route uses only the first segment (e.g. Rust from Rust_Programming)
+      slugify(normalizedToken.split('_')[0] ?? normalizedToken),
+      // If route uses dashes instead of underscores
+      slugify(normalizedToken.replace(/_/g, '-'))
+    ])
+  );
 }
+
 
 function buildCatalogIndex(subjects: SubjectCatalog[]): CatalogIndex {
   const byPrimaryKey = new Map<string, SubjectCatalog>();

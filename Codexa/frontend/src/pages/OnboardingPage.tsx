@@ -9,7 +9,10 @@ import { Input } from '@/components/ui/input';
 import api from '@/api/client';
 import { useAuth } from '@/context/AuthContext';
 
+type Difficulty = 'Easy' | 'Medium' | 'Hard';
+
 const durations = ['1 Month', '3 Months', '6 Months', '9 Months', '12 Months', 'Custom'];
+
 
 type SubjectOption = {
   label: string;
@@ -177,6 +180,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [selectedDuration, setSelectedDuration] = useState<string | null>(null);
   const [subjects, setSubjects] = useState<string[]>([]);
+  const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [subjectSearch, setSubjectSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
@@ -184,6 +188,7 @@ export default function OnboardingPage() {
   const [customSubjects, setCustomSubjects] = useState<SubjectOption[]>([]);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
 
   const { data: datasetCatalog } = useQuery({
     queryKey: ['subject-catalog-list'],
@@ -218,6 +223,12 @@ export default function OnboardingPage() {
 
     setSelectedDuration(user.onboardingDuration ?? null);
     setSubjects(savedSubjects);
+    // Map backend onboardingIntensity -> difficulty
+    if (user.onboardingIntensity === 'Easy' || user.onboardingIntensity === 'Medium' || user.onboardingIntensity === 'Hard') {
+      setDifficulty(user.onboardingIntensity);
+    } else {
+      setDifficulty(null);
+    }
     setCustomSubjects(savedSubjects.filter((subject) => !catalogLabels.has(subject.toLowerCase())).map((label) => ({ label, category: 'Custom Subjects' })));
   }, [user, subjectGroupsWithCatalog]);
 
@@ -246,12 +257,26 @@ export default function OnboardingPage() {
   }
 
   async function persistOnboardingData(nextSubjects: string[], completed = false) {
+    // Temporary debug logs (remove after verification)
+    // eslint-disable-next-line no-console
+    console.log('[OnboardingPage] persistOnboardingData payload:', {
+      selectedSubjects: nextSubjects,
+      onboardingDuration: selectedDuration,
+      difficulty,
+      onboardingCompleted: completed
+    });
+
     await api.put('/profile/me', {
       selectedSubjects: nextSubjects,
       onboardingDuration: selectedDuration,
+      // backend schema uses onboardingIntensity; map Difficulty -> intensity for now
+      onboardingIntensity: difficulty,
       onboardingCompleted: completed
     });
     await refreshUser();
+
+    // eslint-disable-next-line no-console
+    console.log('[OnboardingPage] refreshUser complete');
   }
 
   function toggleSubject(subjectLabel: string) {
@@ -286,6 +311,13 @@ export default function OnboardingPage() {
     setSaveMessage(null);
 
     try {
+      // eslint-disable-next-line no-console
+      console.log('[OnboardingPage] Finish clicked, current state:', {
+        subjects,
+        selectedDuration,
+        difficulty
+      });
+
       await persistOnboardingData(subjects, true);
       setSaveStatus('success');
       setSaveMessage('Setup saved. Loading your dashboard...');
@@ -364,24 +396,25 @@ export default function OnboardingPage() {
 
               {step === 3 && (
                 <div>
-                  <p className="text-sm text-white/70 mb-4">Overview — How Codexa will help you</p>
+                  <p className="text-sm text-white/70 mb-4">Select difficulty level</p>
                   <div className="grid grid-cols-3 gap-4">
-                    {[
-                      'Placement Preparation Tracking',
-                      'Subject-wise Progress Analytics',
-                      'Mock Interview Practice',
-                      'Coding Practice Monitoring',
-                      'Target & Consistency Tracking',
-                      'Daily Productivity Analysis'
-                    ].map((t) => (
-                      <motion.div whileHover={{ scale: 1.03 }} key={t} className="rounded-xl border p-4 bg-white/3 border-white/10">
-                        <div className="font-semibold">{t}</div>
-                        <div className="text-sm text-white/60 mt-2">Tap to learn more</div>
-                      </motion.div>
+                    {(['Easy', 'Medium', 'Hard'] as Difficulty[]).map((d) => (
+                      <motion.button
+                        key={d}
+                        whileHover={{ scale: 1.02 }}
+                        onClick={() => setDifficulty(d)}
+                        className={`rounded-xl border p-4 text-left ${difficulty === d ? 'border-fuchsia-400 bg-white/5 shadow-lg' : 'border-white/10 bg-transparent'}`}
+                      >
+                        <div className="font-semibold">{d}</div>
+                        <div className="mt-1 text-sm text-white/60">
+                          {d === 'Easy' ? 'Start with lighter pacing' : d === 'Medium' ? 'Balanced challenge' : 'Aggressive targets'}
+                        </div>
+                      </motion.button>
                     ))}
                   </div>
                 </div>
               )}
+
 
               <div className="flex items-center justify-between mt-6">
                 <div>
@@ -391,7 +424,9 @@ export default function OnboardingPage() {
                   {step < 3 ? (
                     <Button onClick={() => setStep((s) => s + 1)}>Next</Button>
                   ) : (
-                    <Button onClick={finish} disabled={saveStatus === 'saving'}>{saveStatus === 'saving' ? 'Saving...' : 'Enter Dashboard'}</Button>
+                    <Button onClick={finish} disabled={saveStatus === 'saving' || !difficulty}>
+                      {saveStatus === 'saving' ? 'Saving...' : 'Enter Dashboard'}
+                    </Button>
                   )}
                 </div>
               </div>
