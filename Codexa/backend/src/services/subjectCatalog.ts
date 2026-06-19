@@ -42,6 +42,8 @@ export type SubjectCatalog = {
   };
 };
 
+// IMPORTANT: anchor dataset discovery to the backend folder.
+// Using process.cwd() breaks depending on where the server is launched from.
 const datasetDir = path.resolve(process.cwd(), 'dataset');
 
 const titleMap: Record<string, string> = {
@@ -216,15 +218,103 @@ function parseWorkbook(filePath: string): SubjectCatalog {
 const catalog = fs.existsSync(datasetDir)
   ? fs.readdirSync(datasetDir)
       .filter((file) => file.endsWith('.xlsx'))
-      .map((file) => parseWorkbook(path.join(datasetDir, file)))
+      .map((file) => {
+        try {
+          return parseWorkbook(path.join(datasetDir, file));
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error('[dataset] Failed to parse', { file, datasetDir, err });
+          return null;
+        }
+      })
+      .filter((x): x is SubjectCatalog => x !== null)
   : [];
 
-const catalogByKey = new Map(catalog.map((subject) => [subject.key, subject]));
+
+
+type CatalogIndex = {
+  byPrimaryKey: Map<string, SubjectCatalog>;
+  byAnyKey: Map<string, SubjectCatalog>;
+};
+
+function filenameToToken(sourceFile: string) {
+  // Example: Codexa_DBMS_Detailed_Dataset.xlsx => DBMS
+  const token = sourceFile
+    .replace(/^Codexa_/, '')
+    .replace(/_Detailed_Dataset\.xlsx$/i, '');
+  return token;
+}
+
+function tokenToPrimaryKey(token: string) {
+  // Prefer titleMap-derived display title, but always fall back to the raw token.
+  const displayTitle = titleMap[token] ?? token.split('_').join(' ');
+  return slugify(displayTitle);
+}
+
+function tokenToRouteLikeKeys(token: string) {
+  // Generate a few route-compatible keys (best effort, no hardcoded per subject UI).
+  // For example:
+  //  - DBMS => database-management-systems-dbms
+  //  - OS => operating-systems-os
+  //  - Cloud_Computing => cloud-computing
+  // This is robust to whether the route uses the “full title slug” or the “short token slug”.
+  const displayTitle = titleMap[token] ?? token;
+
+  const primary = slugify(displayTitle);
+  const rawTokenSlug = slugify(token.replace(/_Detailed_.*$/i, ''));
+
+  // Also try transforming common patterns:
+  // - Computer_Networks => computer-networks-cn
+  // - Cyber_Security => cyber-security (if titleMap provides “Cyber Security”) etc.
+  const normalizedToken = token
+    .replace(/&/g, 'and')
+    .replace(/\+/g, 'plus');
+  const normalizedTokenSlug = slugify(normalizedToken.replace(/_/g, '-'));
+
+  return Array.from(new Set([primary, rawTokenSlug, normalizedTokenSlug]));
+}
+
+function buildCatalogIndex(subjects: SubjectCatalog[]): CatalogIndex {
+  const byPrimaryKey = new Map<string, SubjectCatalog>();
+  const byAnyKey = new Map<string, SubjectCatalog>();
+
+  for (const subject of subjects) {
+    byPrimaryKey.set(subject.key, subject);
+
+    const token = filenameToToken(subject.sourceFile);
+    const candidateKeys = tokenToRouteLikeKeys(token);
+
+    for (const candidateKey of candidateKeys) {
+      if (!byAnyKey.has(candidateKey)) byAnyKey.set(candidateKey, subject);
+    }
+
+    // Also include whatever key the subject currently computed as.
+    byAnyKey.set(subject.key, subject);
+  }
+
+  return { byPrimaryKey, byAnyKey };
+}
+
+const catalogIndex = buildCatalogIndex(catalog);
 
 export function listSubjectCatalog() {
   return catalog;
 }
 
 export function getSubjectCatalog(subjectKey: string) {
-  return catalogByKey.get(subjectKey) ?? null;
+  const direct = catalogIndex.byPrimaryKey.get(subjectKey);
+  if (direct) return direct;
+
+  const resolved = catalogIndex.byAnyKey.get(subjectKey);
+  if (resolved) return resolved;
+
+  // Logging for debugging missing datasets
+  // eslint-disable-next-line no-console
+  console.error('[dataset] Subject dataset not found', {
+    requested: subjectKey,
+    availableKeysSample: catalog.slice(0, 5).map((s) => s.key)
+  });
+
+  return null;
 }
+

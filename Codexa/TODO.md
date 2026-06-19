@@ -1,9 +1,15 @@
-- [x] Update TargetsPage target creation workflow:
-  - [x] Add subject selection (searchable dropdown) before title entry
-  - [x] Populate target title dropdown dynamically based on selected subject dataset (best-effort flatten from dataset catalog)
-  - [x] Provide “Create Custom Target” option to allow free-text titles
-  - [ ] Save targets with subject linkage (and due date/completion status) using existing backend endpoints, or minimal new endpoints if required
-- [ ] Update any supporting backend/frontend types/services if needed
-- [x] Build frontend to verify compilation
+# Codexa – Dataset Integration Fix (Work Log)
 
+## Planned steps
+1. Fix dataset discovery path in `backend/src/services/subjectCatalog.ts` so it always points to `backend/dataset` regardless of working directory.
+2. Validate endpoint wiring (backend routes/controllers returning subject content).
+3. Validate frontend subject pages/tabs load and render the dataset, and show a “No dataset available yet…” message when missing.
+4. Ensure route slug ↔ dataset mapping covers all required subjects.
+
+## Progress
+- [x] Step 1: Fix `datasetDir` absolute path.
+
+- [ ] Step 2: Inspect backend subject routes/controllers.
+- [ ] Step 3: Inspect frontend subject pages rendering & empty states.
+- [ ] Step 4: Verify mapping for OS/DBMS/CN/DSA/etc.
 
