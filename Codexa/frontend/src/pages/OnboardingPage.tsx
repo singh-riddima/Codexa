@@ -257,15 +257,6 @@ export default function OnboardingPage() {
   }
 
   async function persistOnboardingData(nextSubjects: string[], completed = false) {
-    // Temporary debug logs (remove after verification)
-    // eslint-disable-next-line no-console
-    console.log('[OnboardingPage] persistOnboardingData payload:', {
-      selectedSubjects: nextSubjects,
-      onboardingDuration: selectedDuration,
-      difficulty,
-      onboardingCompleted: completed
-    });
-
     await api.put('/profile/me', {
       selectedSubjects: nextSubjects,
       onboardingDuration: selectedDuration,
@@ -275,8 +266,6 @@ export default function OnboardingPage() {
     });
     await refreshUser();
 
-    // eslint-disable-next-line no-console
-    console.log('[OnboardingPage] refreshUser complete');
   }
 
   function toggleSubject(subjectLabel: string) {
@@ -311,13 +300,6 @@ export default function OnboardingPage() {
     setSaveMessage(null);
 
     try {
-      // eslint-disable-next-line no-console
-      console.log('[OnboardingPage] Finish clicked, current state:', {
-        subjects,
-        selectedDuration,
-        difficulty
-      });
-
       await persistOnboardingData(subjects, true);
       setSaveStatus('success');
       setSaveMessage('Setup saved. Loading your dashboard...');

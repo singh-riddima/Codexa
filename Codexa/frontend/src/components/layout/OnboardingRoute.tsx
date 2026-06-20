@@ -21,9 +21,7 @@ export function OnboardingRoute({ children }: { children: JSX.Element }) {
       setCheckingServer(true);
       void refreshUser()
         .catch(() => {
-          // Temporary debug: refresh failures should not hard-crash routing.
-          // eslint-disable-next-line no-console
-          console.log('[OnboardingRoute] refreshUser failed');
+          // ignore refresh errors; we'll fall back to the persisted user object
         })
         .finally(() => setCheckingServer(false));
     }
@@ -36,10 +34,6 @@ export function OnboardingRoute({ children }: { children: JSX.Element }) {
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
-
-  // Temporary debug logs (remove after verification)
-  // eslint-disable-next-line no-console
-  console.log('[OnboardingRoute] onboardingCompleted:', user.onboardingCompleted);
 
   if (user.onboardingCompleted) {
     return <Navigate to="/dashboard" replace />;
