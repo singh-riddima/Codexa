@@ -96,7 +96,30 @@ export default function TargetsPage() {
 
   const [draftTitle, setDraftTitle] = useState('');
 
+  const [availableTargetTitles, setAvailableTargetTitles] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Debug: ensure dropdown selection + title list are updated
+    console.log('[TargetsPage] draftSubjectKey:', draftSubjectKey);
+    console.log('[TargetsPage] availableTargetTitles:', availableTargetTitles.slice(0, 10));
+    console.log('[TargetsPage] draftTitle:', draftTitle);
+  }, [draftSubjectKey, availableTargetTitles, draftTitle]);
+
+  // Keep title dropdown fully controlled.
+  // CodexaSelect expects `value` to exactly match one of the option `value`s.
+  // When the fetched title list changes, ensure we don't keep an invalid title.
+  useEffect(() => {
+    if (useCustomTitle) return;
+    if (!draftTitle) return;
+    if (!availableTargetTitles.includes(draftTitle)) {
+      setDraftTitle('');
+    }
+  }, [availableTargetTitles, draftTitle, useCustomTitle]);
+
+
+
   const subjectQueries = useQueries({
+
     queries: selectedSubjectKeys.map((key) => ({
       queryKey: ['subject', key],
       queryFn: async () => (await api.get(`/subject/${key}`)).data,
@@ -135,52 +158,51 @@ export default function TargetsPage() {
     setDraftSubjectTitle(idx >= 0 ? selectedSubjects[idx] : '');
   }, [draftSubjectKey, selectedSubjectKeys, selectedSubjects]);
 
-  useEffect(() => {
-    // fetch available titles for the selected subject using existing dataset endpoints
-    const fetchCatalog = async () => {
-      if (!draftSubjectKey) return;
-      const res = await api.get(`/subject/${draftSubjectKey}/catalog`);
-      const data = res.data as SubjectCatalogResponse;
-      // Titles derived from modules/topics/subtopics in dataset (best-effort flatten)
-      const modules = data?.subject?.modules ?? [];
-      const titles = modules.flatMap((m) => {
-        const topicTitles = (m.topics ?? []).map((t) => t.title).filter(Boolean);
-        return [m.module, ...topicTitles];
-      }).filter(Boolean);
-      setDraftTitle((prev) => (prev ? prev : ''));
-      setAvailableTargetTitles(titles);
-    };
 
-    // local state set below
-  }, []);
-
-  const [availableTargetTitles, setAvailableTargetTitles] = useState<string[]>([]);
-
+  // Load target titles when subject changes
   useEffect(() => {
     const fetchSubjectTitles = async () => {
       if (!draftSubjectKey) {
         setAvailableTargetTitles([]);
         return;
       }
+
       try {
         const res = await api.get(`/subject/${draftSubjectKey}/catalog`);
         const data = res.data as SubjectCatalogResponse;
+
         const modules = data?.subject?.modules ?? [];
-        const titles = modules.flatMap((m) => {
-          const topicTitles = (m.topics ?? []).map((t) => t.title).filter(Boolean);
-          return [m.module, ...topicTitles];
-        }).filter(Boolean);
+        const titles = modules
+          .flatMap((m) => {
+            const topicTitles = (m.topics ?? []).map((t) => t.title).filter(Boolean);
+            return [m.module, ...topicTitles];
+          })
+          .filter(Boolean);
+
         setAvailableTargetTitles(Array.from(new Set(titles)));
+
+        // if current title isn't available for new subject, clear it
+        setDraftTitle((prev) => {
+          const nextTitle = prev?.trim?.() ?? '';
+          if (!nextTitle) return '';
+          return titles.includes(nextTitle) ? prev : '';
+        });
       } catch {
         setAvailableTargetTitles([]);
+        setDraftTitle('');
       }
     };
 
-    fetchSubjectTitles();
+    void fetchSubjectTitles();
     setTitleSearch('');
     setUseCustomTitle(false);
-    setDraftTitle('');
+    // keep draftTitle if still valid; it will be validated above
   }, [draftSubjectKey]);
+
+  // If the title was selected while using the dropdown, it must be controlled
+  // by `draftTitle` (same state used for value + Create Target).
+  // No further changes required here.
+
 
   const filteredSubjectOptions = useMemo(() => {
     const q = subjectSearch.trim().toLowerCase();
