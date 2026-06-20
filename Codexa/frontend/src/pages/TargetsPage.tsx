@@ -105,16 +105,7 @@ export default function TargetsPage() {
     console.log('[TargetsPage] draftTitle:', draftTitle);
   }, [draftSubjectKey, availableTargetTitles, draftTitle]);
 
-  // Keep title dropdown fully controlled.
-  // CodexaSelect expects `value` to exactly match one of the option `value`s.
-  // When the fetched title list changes, ensure we don't keep an invalid title.
-  useEffect(() => {
-    if (useCustomTitle) return;
-    if (!draftTitle) return;
-    if (!availableTargetTitles.includes(draftTitle)) {
-      setDraftTitle('');
-    }
-  }, [availableTargetTitles, draftTitle, useCustomTitle]);
+
 
 
 
