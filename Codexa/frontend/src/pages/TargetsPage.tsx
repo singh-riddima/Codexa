@@ -10,7 +10,8 @@ import { useAuth } from '@/context/AuthContext';
 import { slugifySubjectName } from '@/lib/subject-data';
 import api from '@/api/client';
 import { useQueries } from '@tanstack/react-query';
-import { CodexaSelect } from '@/components/ui/codexa-select';
+import { CodexaSelect } from '@/components/ui/CodexaSelect';
+
 import { CodexaDateInput } from '@/components/ui/codexa-date-input';
 
 
