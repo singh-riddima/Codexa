@@ -301,10 +301,15 @@ export default function TargetsPage() {
                   {/* Step 2: Title (dropdown from dataset + optional custom) */}
                   <div className="space-y-2">
                     <Input
-                      value={useCustomTitle ? draftTitle : titleSearch}
-                      onChange={(e) => (useCustomTitle ? setDraftTitle(e.target.value) : setTitleSearch(e.target.value))}
+                      value={draftTitle}
+                      readOnly={!useCustomTitle}
+                      onChange={(e) => {
+                        if (!useCustomTitle) return;
+                        setDraftTitle(e.target.value);
+                      }}
                       placeholder={useCustomTitle ? 'Custom target title' : 'Search target title'}
                     />
+
 
                     {useCustomTitle ? null : (
                       <CodexaSelect
