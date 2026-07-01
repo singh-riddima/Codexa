@@ -36,6 +36,13 @@ export default function GoogleAuthCallbackPage() {
 
     const storage = rememberMe ? localStorage : sessionStorage;
     storage.setItem('codexa-token', token);
+    if (rememberMe) {
+      sessionStorage.removeItem('codexa-token');
+      sessionStorage.removeItem('codexa-user');
+    } else {
+      localStorage.removeItem('codexa-token');
+      localStorage.removeItem('codexa-user');
+    }
     localStorage.removeItem('codexa-user');
     sessionStorage.removeItem('codexa-user');
 
