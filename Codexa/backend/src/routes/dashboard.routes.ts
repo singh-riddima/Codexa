@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '@/config/prisma.js';
 import { authMiddleware } from '@/middleware/auth.js';
 import { asyncHandler } from '@/utils/asyncHandler.js';
+import { buildTelemetry } from '@/services/analyticsTelemetry.js';
 
 const router = Router();
 
@@ -12,20 +13,19 @@ const isDbUnavailableError = (error: unknown) => {
 
 const fallbackSummary = {
   metrics: {
-    totalSolved: 186,
-    dsaCompletion: 78,
-    dailyStreak: 21,
-    weeklyConsistency: 91,
-    readinessScore: 84
+    totalSolved: 0,
+    dsaCompletion: 0,
+    dailyStreak: 0,
+    weeklyConsistency: 0,
+    readinessScore: 0
   },
-  goals: [
-    { id: 'goal-1', title: 'Finish 250 DSA problems', description: 'Keep pushing arrays, trees, and graphs.' },
-    { id: 'goal-2', title: 'Revise core subjects', description: 'Refresh DBMS, OS, CN, and OOPs.' },
-    { id: 'goal-3', title: 'Improve mock interview score', description: 'Practice technical questions twice this week.' }
-  ],
+  goals: [],
   topics: [],
   problems: [],
-  snapshot: null
+  snapshot: null,
+  weeklySeries: [],
+  heatmap: [],
+  radar: []
 };
 
 router.get('/summary', authMiddleware, asyncHandler(async (req, res) => {
@@ -37,19 +37,25 @@ router.get('/summary', authMiddleware, asyncHandler(async (req, res) => {
       prisma.goal.findMany({ where: { userId } }),
       prisma.analyticsSnapshot.findFirst({ where: { userId }, orderBy: { date: 'desc' } })
     ]);
+    const subjects = await prisma.subjectProgress.findMany({ where: { userId } });
+    const aptitude = await prisma.aptitudePerformance.findMany({ where: { userId } });
+    const telemetry = buildTelemetry({ topics, problems, subjects, aptitude, goals, snapshot });
 
     res.json({
       metrics: {
-        totalSolved: problems.filter((problem) => problem.solved).length,
-        dsaCompletion: topics.length ? Math.round((topics.filter((topic) => topic.completed).length / topics.length) * 100) : 0,
-        dailyStreak: snapshot?.streak ?? 0,
-        weeklyConsistency: snapshot?.weeklyConsistency ?? 0,
-        readinessScore: snapshot?.readinessScore ?? 0
+        totalSolved: telemetry.totalSolved,
+        dsaCompletion: telemetry.dsaCompletion,
+        dailyStreak: telemetry.dailyStreak,
+        weeklyConsistency: telemetry.weeklyConsistency,
+        readinessScore: telemetry.readinessScore
       },
       goals,
       topics,
       problems,
-      snapshot
+      snapshot,
+      weeklySeries: telemetry.weeklySeries,
+      heatmap: telemetry.heatmap,
+      radar: telemetry.radar
     });
   } catch (error) {
     if (!isDbUnavailableError(error)) {

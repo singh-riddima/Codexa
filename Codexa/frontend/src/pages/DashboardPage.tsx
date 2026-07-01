@@ -12,7 +12,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dashboardStats, heatmapData, radarData, weeklySeries } from '@/lib/mock-data';
 import { slugifySubjectName } from '@/lib/subject-data';
 import { useDashboardSummary } from '@/hooks/useDashboardSummary';
 import api from '@/api/client';
@@ -41,6 +40,13 @@ type DatasetCatalogItem = {
   };
 };
 
+type WeeklySeriesPoint = {
+  day: string;
+  solved: number;
+  study: number;
+  confidence: number;
+};
+
 const practiceCards = [
   { title: 'Mock Interview Questions', description: 'Behavioral + technical mock interview sets with guided scoring.', to: '/practice/mock-interview' },
   { title: 'Mock Coding Practice Questions', description: 'Timed coding rounds aligned to placement prep patterns.', to: '/coding' },
@@ -53,11 +59,14 @@ export default function DashboardPage() {
   const { user, refreshUser } = useAuth();
   const { data, isLoading } = useDashboardSummary();
   const [subjectDraft, setSubjectDraft] = useState('');
-  const metrics = data?.metrics ?? dashboardStats;
-  const weekly = data?.weeklySeries ?? weeklySeries;
-  const heatmap = data?.heatmap ?? heatmapData;
-  const radar = data?.radar ?? radarData;
+  const metrics = data?.metrics ?? [];
+  const weekly = (data?.weeklySeries ?? []) as WeeklySeriesPoint[];
+  const heatmap = data?.heatmap ?? [];
+  const radar = data?.radar ?? [];
   const selectedSubjectKeys = useMemo(() => (user?.selectedSubjects ?? []).map((subjectName) => slugifySubjectName(subjectName)), [user?.selectedSubjects]);
+  const totalWeeklySolved = weekly.reduce((sum: number, item: WeeklySeriesPoint) => sum + item.solved, 0);
+  const totalWeeklyStudy = weekly.reduce((sum: number, item: WeeklySeriesPoint) => sum + item.study, 0);
+  const averageWeeklyStudy = weekly.length ? (totalWeeklyStudy / weekly.length).toFixed(1) : '0.0';
 
   const { data: datasetCatalog } = useQuery({
     queryKey: ['subject-catalog-list'],
@@ -119,14 +128,14 @@ export default function DashboardPage() {
   );
 
   const overviewCards = [
-    { label: 'Overall placement preparation', value: '84%' },
-    { label: 'Course completion', value: '76%' },
-    { label: 'Daily activity tracker', value: '4.2 hrs today' },
-    { label: 'Study consistency', value: '86%' },
-    { label: 'Total subjects selected', value: String(selectedSubjectKeys.length) },
-    { label: 'Weekly productivity', value: '118 tasks' },
-    { label: 'Daily study hours', value: '4.2h avg' },
-    { label: 'Progress summary', value: 'On track' }
+    { label: 'Readiness score', value: metrics[3]?.value ?? '0/100' },
+    { label: 'DSA completion', value: metrics[1]?.value ?? '0%' },
+    { label: 'Daily streak', value: metrics[2]?.value ?? '0 days' },
+    { label: 'Total solved', value: metrics[0]?.value ?? '0' },
+    { label: 'Selected subjects', value: String(selectedSubjectKeys.length) },
+    { label: 'Weekly solved', value: String(totalWeeklySolved) },
+    { label: 'Weekly study load', value: `${averageWeeklyStudy} avg` },
+    { label: 'Tracked goals', value: String(data?.goals?.length ?? 0) }
   ];
 
   const persistSubjects = async (nextSubjects: string[]) => {

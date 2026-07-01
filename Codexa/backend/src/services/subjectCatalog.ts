@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import XLSX from 'xlsx';
 
 export type CatalogSubtopic = {
@@ -44,7 +45,7 @@ export type SubjectCatalog = {
 
 // IMPORTANT: anchor dataset discovery to the backend folder.
 // Using process.cwd() breaks depending on where the server is launched from.
-const datasetDir = path.resolve(process.cwd(), 'dataset');
+const datasetDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../dataset');
 
 const titleMap: Record<string, string> = {
   'API_Development': 'API Development',

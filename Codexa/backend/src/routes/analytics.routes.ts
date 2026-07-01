@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '@/config/prisma.js';
 import { authMiddleware } from '@/middleware/auth.js';
 import { asyncHandler } from '@/utils/asyncHandler.js';
+import { buildTelemetry } from '@/services/analyticsTelemetry.js';
 
 const router = Router();
 
@@ -16,10 +17,19 @@ router.get('/', asyncHandler(async (req, res) => {
     prisma.aptitudePerformance.findMany({ where: { userId } }),
     prisma.goal.findMany({ where: { userId } })
   ]);
+  const snapshot = await prisma.analyticsSnapshot.findFirst({ where: { userId }, orderBy: { date: 'desc' } });
+  const telemetry = buildTelemetry({ topics, problems, subjects, aptitude, goals, snapshot });
 
   res.json({
     charts: { dsa: topics, coding: problems, subjects, aptitude, goals },
-    readiness: { score: 84, prediction: 87, risk: 'Dynamic Programming revision' }
+    readiness: {
+      score: telemetry.readinessScore,
+      prediction: Math.min(100, telemetry.readinessScore + 3),
+      risk: telemetry.dsaCompletion < 50 ? 'Topic completion' : telemetry.weeklyConsistency < 60 ? 'Consistency' : 'Advanced revisions'
+    },
+    weeklySeries: telemetry.weeklySeries,
+    heatmap: telemetry.heatmap,
+    radar: telemetry.radar
   });
 }));
 

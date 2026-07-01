@@ -3,14 +3,16 @@ import { ChartPanel } from '@/components/dashboard/ChartPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heatmap } from '@/components/dashboard/Heatmap';
 import { Skeleton } from '@/components/ui/skeleton';
-import { heatmapData, radarData, weeklySeries } from '@/lib/mock-data';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 
 export default function AnalyticsPage() {
   const { data, isLoading } = useAnalyticsData();
-  const weekly = data?.fallback?.weeklySeries ?? weeklySeries;
-  const radar = data?.fallback?.radarData ?? radarData;
-  const heatmap = data?.fallback?.heatmapData ?? heatmapData;
+  const weekly = data?.weeklySeries ?? [];
+  const radar = data?.radarData ?? [];
+  const heatmap = data?.heatmapData ?? [];
+  const readinessScore = data?.readiness?.score ?? 0;
+  const readinessPrediction = data?.readiness?.prediction ?? 0;
+  const readinessRisk = data?.readiness?.risk ?? 'No live data available';
 
   return (
     <AppShell>
@@ -38,9 +40,9 @@ export default function AnalyticsPage() {
               <CardTitle>Interview readiness prediction</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-white/70">
-              <div className="rounded-2xl border border-white/8 bg-white/5 p-4">Predicted readiness next 14 days: <span className="font-semibold text-white">87%</span></div>
-              <div className="rounded-2xl border border-white/8 bg-white/5 p-4">Most likely weakness: <span className="font-semibold text-white">Dynamic Programming revisions</span></div>
-              <div className="rounded-2xl border border-white/8 bg-white/5 p-4">Suggested focus: <span className="font-semibold text-white">2 mock interviews + 12 problem revisions</span></div>
+              <div className="rounded-2xl border border-white/8 bg-white/5 p-4">Current readiness score: <span className="font-semibold text-white">{readinessScore}/100</span></div>
+              <div className="rounded-2xl border border-white/8 bg-white/5 p-4">Predicted readiness next 14 days: <span className="font-semibold text-white">{readinessPrediction}%</span></div>
+              <div className="rounded-2xl border border-white/8 bg-white/5 p-4">Primary focus area: <span className="font-semibold text-white">{readinessRisk}</span></div>
             </CardContent>
           </Card>
         </section>

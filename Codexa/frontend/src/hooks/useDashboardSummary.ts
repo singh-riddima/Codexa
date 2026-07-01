@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/api/client';
-import { dashboardStats, heatmapData, radarData, weeklySeries, sampleGoals } from '@/lib/mock-data';
 
 export function useDashboardSummary() {
   return useQuery({
@@ -18,17 +17,22 @@ export function useDashboardSummary() {
         return {
           metrics,
           goals: data.goals,
-          heatmap: heatmapData,
-          radar: radarData,
-          weeklySeries
+          heatmap: data.heatmap ?? [],
+          radar: data.radar ?? [],
+          weeklySeries: data.weeklySeries ?? []
         };
       } catch {
         return {
-          metrics: dashboardStats,
-          goals: sampleGoals,
-          heatmap: heatmapData,
-          radar: radarData,
-          weeklySeries
+          metrics: [
+            { label: 'Total Problems Solved', value: '0', delta: 'No live data', tone: 'brand' as const },
+            { label: 'DSA Completion', value: '0%', delta: 'No live data', tone: 'success' as const },
+            { label: 'Daily Streak', value: '0 days', delta: 'No live data', tone: 'warning' as const },
+            { label: 'Readiness Score', value: '0/100', delta: 'No live data', tone: 'neutral' as const }
+          ],
+          goals: [],
+          heatmap: [],
+          radar: [],
+          weeklySeries: []
         };
       }
     }

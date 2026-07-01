@@ -6,19 +6,19 @@
 - [x] Verified Prisma schema has no `Target` model.
 
 ## Phase 2 — Implement persistence layer (required for live)
-- [ ] Add `Target` model to `backend/prisma/schema.prisma`.
-- [ ] Create migration(s) and regenerate Prisma client.
-- [ ] Add `backend/src/routes/targets.routes.ts` with CRUD endpoints.
-- [ ] Mount targets routes in `backend/src/routes/index.ts`.
+- [x] Add `Target` model to `backend/prisma/schema.prisma`.
+- [x] Create migration(s) and regenerate Prisma client.
+- [x] Add `backend/src/routes/targets.routes.ts` with CRUD endpoints.
+- [x] Mount targets routes in `backend/src/routes/index.ts`.
 
 ## Phase 3 — Wire frontend to backend
-- [ ] Update `frontend/src/pages/TargetsPage.tsx` to:
-  - [ ] Load targets from `GET /api/targets`.
-  - [ ] Create target via `POST /api/targets`.
-  - [ ] Toggle complete via `PATCH /api/targets/:id/toggle`.
-  - [ ] Update progress via `PATCH /api/targets/:id`.
-  - [ ] Delete via `DELETE /api/targets/:id`.
-- [ ] Remove debug `console.log` from `TargetsPage.tsx`.
+- [x] Update `frontend/src/pages/TargetsPage.tsx` to:
+  - [x] Load targets from `GET /api/targets`.
+  - [x] Create target via `POST /api/targets`.
+  - [x] Toggle complete via `PATCH /api/targets/:id/toggle`.
+  - [x] Update progress via `PATCH /api/targets/:id`.
+  - [x] Delete via `DELETE /api/targets/:id`.
+- [x] Remove debug `console.log` from `TargetsPage.tsx`.
 
 ## Phase 4 — Build & smoke tests
 - [ ] Run `npm run build:frontend`.
