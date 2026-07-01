@@ -6,6 +6,7 @@ import analyticsRoutes from './analytics.routes.js';
 import profileRoutes from './profile.routes.js';
 import goalsRoutes from './goals.routes.js';
 import subjectRoutes from './subject.routes.js';
+import targetsRoutes from './targets.routes.js';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.use('/analytics', analyticsRoutes);
 router.use('/profile', profileRoutes);
 router.use('/goals', goalsRoutes);
 router.use('/subject', subjectRoutes);
+router.use('/targets', targetsRoutes);
 
 router.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'codexa-api' });
