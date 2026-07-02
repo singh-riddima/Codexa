@@ -3,7 +3,6 @@ import LandingPage from './pages/LandingPage';
 import FeaturesPage from './pages/FeaturesPage';
 import AboutPage from './pages/AboutPage';
 import CreatorPage from './pages/CreatorPage';
-import ContactPage from './pages/ContactPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import GoogleAuthCallbackPage from './pages/GoogleAuthCallbackPage';
@@ -38,7 +37,6 @@ export const AppRoutes = [
   { path: '/features', element: <FeaturesPage /> },
   { path: '/about', element: <AboutPage /> },
   { path: '/creator', element: <CreatorPage /> },
-  { path: '/contact', element: <ContactPage /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/signup', element: <SignupPage /> },
   { path: '/auth/google/callback', element: <GoogleAuthCallbackPage /> },

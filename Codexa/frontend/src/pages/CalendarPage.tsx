@@ -51,9 +51,9 @@ export default function CalendarPage() {
                       !cell
                         ? 'h-12 rounded-xl border border-transparent'
                         : cell.status === 'achieved'
-                          ? 'h-12 rounded-xl border border-pink-400/45 bg-pink-500/22 text-pink-100'
+                          ? 'h-12 rounded-xl border border-emerald-400/45 bg-emerald-500/22 text-emerald-100'
                           : cell.status === 'missed'
-                            ? 'h-12 rounded-xl border border-violet-400/45 bg-violet-500/20 text-violet-100'
+                            ? 'h-12 rounded-xl border border-rose-400/45 bg-rose-500/20 text-rose-100'
                             : 'h-12 rounded-xl border border-white/10 bg-white/5 text-white/70'
                     }
                   >
@@ -69,8 +69,8 @@ export default function CalendarPage() {
               <CardTitle>Legend</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-white/70">
-              <div className="rounded-2xl border border-pink-400/40 bg-pink-500/20 p-3">Pink: Day targets achieved</div>
-              <div className="rounded-2xl border border-violet-400/40 bg-violet-500/20 p-3">Purple: Day targets not achieved</div>
+              <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/20 p-3">Green: Day targets achieved</div>
+              <div className="rounded-2xl border border-rose-400/40 bg-rose-500/20 p-3">Red: Day targets not achieved</div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-3">Neutral: No tracked completion data</div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
                 <p className="text-white/85">Tracked subjects</p>

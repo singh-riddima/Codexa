@@ -8,8 +8,7 @@ import { cn } from '@/lib/utils';
 const publicNavItems = [
   { label: 'Features', to: '/features' },
   { label: 'About', to: '/about' },
-  { label: 'About Creator', to: '/creator' },
-  { label: 'Contact', to: '/contact' }
+  { label: 'About Creator', to: '/creator' }
 ];
 
 export function PublicNavbar() {

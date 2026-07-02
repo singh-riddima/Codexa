@@ -19,9 +19,9 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const navigate = useNavigate();
   const { login, signup } = useAuth();
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('demo@codexa.dev');
-  const [password, setPassword] = useState('password123');
-  const [confirmPassword, setConfirmPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +111,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
               ) : null}
               <div>
                 <label className="mb-2 block text-sm text-white/60">Email</label>
-                <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="demo@codexa.dev" />
+                <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" />
               </div>
               <div>
                 <label className="mb-2 block text-sm text-white/60">Password</label>
@@ -134,7 +134,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
                     <input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} className="h-4 w-4 rounded border-white/20 bg-transparent text-fuchsia-500 focus:ring-fuchsia-400" />
                     Remember me
                   </label>
-                  <Link to="/contact" className="text-fuchsia-200 transition hover:text-white">Forgot password?</Link>
+                  <span className="text-white/45">Forgot password support is unavailable for now.</span>
                 </div>
               ) : (
                 <label className="flex items-center gap-2 text-sm text-white/60">
