@@ -6,6 +6,7 @@ import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import './styles/globals.css';
+import { Analytics } from '@vercel/analytics/react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,6 +25,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         <AuthProvider>
           <BrowserRouter>
             <App />
+            <Analytics />
           </BrowserRouter>
         </AuthProvider>
       </ThemeProvider>

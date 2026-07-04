@@ -34,3 +34,11 @@
     "vite": "^5.4.10"
   }
 }
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
